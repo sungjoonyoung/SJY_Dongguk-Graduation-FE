@@ -3,3 +3,8 @@ node_modules/
 .vite/
 dist/
 .DS_Store
+
+.idea/
+.vscode/
+*.log
+.env.local
