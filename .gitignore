@@ -1,0 +1,5 @@
+node_modules/
+.pnpm/
+.vite/
+dist/
+.DS_Store
