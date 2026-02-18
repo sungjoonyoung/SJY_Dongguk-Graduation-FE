@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
-import { Download, Search, AlertTriangle, CheckCircle2, FileX, UserMinus, RefreshCcw, Eye } from 'lucide-react';
+import { Download, Search, CheckCircle2, FileX, UserMinus, RefreshCcw, ShieldCheck, Database, TableProperties } from 'lucide-react';
 import { StudentDetailModal } from '../components/StudentDetailModal';
+import { transformToBackendPayload, createMappingTable } from '../services/transformPayload';
 import type { StudentRecord } from '../types';
 
 export const PreviewPage: React.FC = () => {
-  const { students, reset } = useStore();
+  const { students, studentIndex, reset } = useStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStudent, setSelectedStudent] = useState<StudentRecord | null>(null);
 
@@ -24,14 +25,33 @@ export const PreviewPage: React.FC = () => {
     s.major.includes(searchTerm)
   );
 
-  const handleDownloadJSON = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(students, null, 2));
+  // 공통 다운로드 함수
+  const downloadJSON = (data: any, fileName: string) => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
     const downloadAnchorNode = document.createElement('a');
     downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", "student_matching_results.json");
+    downloadAnchorNode.setAttribute("download", fileName);
     document.body.appendChild(downloadAnchorNode);
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
+  };
+
+  // 1. 전체 통합 데이터 다운로드
+  const handleDownloadFullJSON = () => downloadJSON(students, "1_full_student_records.json");
+
+  // 2. 학생 마스터 정보 원본 다운로드
+  const handleDownloadMetaJSON = () => downloadJSON(Object.values(studentIndex), "2_original_student_meta.json");
+
+  // 3. 백엔드 전송용 익명화 데이터 다운로드
+  const handleDownloadBackendJSON = () => {
+    const backendData = transformToBackendPayload(students);
+    downloadJSON(backendData, "3_backend_payload_anonymized.json");
+  };
+
+  // 4. 암호화 키 매핑 테이블 다운로드
+  const handleDownloadMappingJSON = () => {
+    const mappingTable = createMappingTable(students);
+    downloadJSON(mappingTable, "4_encrypted_id_mapping.json");
   };
 
   return (
@@ -41,13 +61,24 @@ export const PreviewPage: React.FC = () => {
           <h2>데이터 매칭 현황</h2>
           <p>학생 마스터 정보와 성적 ZIP 파일 간의 매칭 결과를 확인합니다.</p>
         </div>
-        <div className="header-actions">
+        <div className="header-actions debug-group">
           <button className="btn-secondary" onClick={reset}>
             <RefreshCcw size={16} /> 다시 업로드
           </button>
-          <button className="btn-primary" onClick={handleDownloadJSON}>
-            <Download size={16} /> 결과 JSON 다운로드
-          </button>
+          <div className="json-buttons">
+            <button className="btn-debug" onClick={handleDownloadMetaJSON} title="마스터 엑셀 정보">
+              <TableProperties size={16} /> [1] 마스터 원본
+            </button>
+            <button className="btn-debug" onClick={handleDownloadFullJSON} title="전체 결과 정보">
+              <Database size={16} /> [2] 전체 통합
+            </button>
+            <button className="btn-secure" onClick={handleDownloadBackendJSON} title="익명화 전송용">
+              <ShieldCheck size={16} /> [3] 백엔드용
+            </button>
+            <button className="btn-debug" onClick={handleDownloadMappingJSON} title="키 매핑 테이블">
+              <Download size={16} /> [4] 키 매핑
+            </button>
+          </div>
         </div>
       </header>
 

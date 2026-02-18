@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, FileDown, User, BarChart3, ListChecks, Award } from 'lucide-react';
+import { X, User, BarChart3, Award } from 'lucide-react';
 import type { StudentRecord } from '../types';
 import { calculateCredits } from '../services/calculateGraduation';
 
@@ -30,7 +30,12 @@ export const StudentDetailModal: React.FC<Props> = ({ student, onClose }) => {
                     {student.status === 'missing_info' && '정보 누락'}
                   </span>
                   <span className="badge-id">학번: {student.studentId} · {student.admissionYear}학번</span>
-                  <span className="badge-major">전공: {student.major || '-'}</span>
+                  <span className="badge-major">주전공: {student.major || '-'}</span>
+                  <span className="badge-double-major">
+                    {student.doubleMajors && student.doubleMajors.length > 0 
+                      ? `복수전공: ${student.doubleMajors.join(', ')}` 
+                      : '단일 전공'}
+                  </span>
                 </div>
               </div>
             </div>
